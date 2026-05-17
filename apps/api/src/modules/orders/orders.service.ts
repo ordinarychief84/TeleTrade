@@ -2,6 +2,7 @@ import { Injectable, BadRequestException, NotFoundException } from '@nestjs/comm
 import { PrismaService } from '../../prisma/prisma.service';
 import { DuplicateDetectorService } from './duplicate-detector.service';
 import { DmsService } from '../dms/dms.service';
+import { DeliveriesService } from '../deliveries/deliveries.service';
 import { OrderDraftInput, OrderStatus, DuplicateReviewStatus } from '@teletrade/shared';
 import { Prisma } from '@prisma/client';
 
@@ -10,7 +11,8 @@ export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly duplicateDetector: DuplicateDetectorService,
-    private readonly dms: DmsService
+    private readonly dms: DmsService,
+    private readonly deliveries: DeliveriesService
   ) {}
 
   list(tenantId: string, filters: { status?: OrderStatus; customerId?: string; agentId?: string; duplicatesOnly?: boolean }) {
@@ -152,6 +154,14 @@ export class OrdersService {
 
     // 2. Schedule DMS sync regardless — manager can cancel later if dup
     await this.dms.scheduleSync(tenantId, updated.id);
+
+    // 3. Auto-assign delivery to a driver on the customer's next route day.
+    //    Best-effort — if the customer has no route, ops will assign manually.
+    try {
+      await this.deliveries.assignForOrder(tenantId, updated.id);
+    } catch {
+      // ignore; delivery can be assigned later
+    }
 
     return updated;
   }

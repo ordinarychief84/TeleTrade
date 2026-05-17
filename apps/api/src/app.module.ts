@@ -19,6 +19,8 @@ import { TerritoriesModule } from './modules/territories/territories.module';
 import { ReportsModule } from './modules/reports/reports.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { RealtimeModule } from './modules/realtime/realtime.module';
+import { DeliveriesModule } from './modules/deliveries/deliveries.module';
+import { InboxModule } from './modules/inbox/inbox.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
 @Module({
@@ -48,6 +50,8 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     ReportsModule,
     AuditModule,
     RealtimeModule,
+    DeliveriesModule,
+    InboxModule,
   ],
   providers: [{ provide: APP_INTERCEPTOR, useClass: AuditInterceptor }],
 })

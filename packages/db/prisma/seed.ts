@@ -310,8 +310,15 @@ async function main() {
     customers.push({ id: c.id, phone: c.phone, routeId: c.routeId, territoryId: c.territoryId! });
   }
 
-  // ---- historical orders ----
-  console.log('  → creating historical orders...');
+  // ---- historical orders + delivery assignments ----
+  console.log('  → creating historical orders + deliveries...');
+  const delivery = users.find((u) => u.email === 'delivery@teletrade.demo')!;
+  const todayMorning = (() => {
+    const d = new Date();
+    d.setHours(9, 0, 0, 0);
+    return d;
+  })();
+  let deliveriesToday = 0;
   for (let i = 0; i < 50; i++) {
     const customer = pick(customers);
     const orderSkus = pickN(skus, rand(2, 5));
@@ -332,19 +339,21 @@ async function main() {
     const discount = Math.random() < 0.3 ? Math.round(subtotal * 0.03) : 0;
     const total = subtotal - discount;
 
-    await prisma.order.create({
+    const status = pick([
+      OrderStatus.SYNCED,
+      OrderStatus.SYNCED,
+      OrderStatus.SYNCED,
+      OrderStatus.DELIVERED,
+      OrderStatus.OUT_FOR_DELIVERY,
+    ]);
+    const createdOrder = await prisma.order.create({
       data: {
         tenantId: tenant.id,
         orderReference: `ORD-${Date.now()}-${i.toString().padStart(4, '0')}`,
         customerId: customer.id,
         agentId: agent.id,
-        status: pick([
-          OrderStatus.SYNCED,
-          OrderStatus.SYNCED,
-          OrderStatus.SYNCED,
-          OrderStatus.DELIVERED,
-          OrderStatus.OUT_FOR_DELIVERY,
-        ]),
+        routeId: customer.routeId,
+        status,
         subtotal,
         discount,
         total,
@@ -353,6 +362,36 @@ async function main() {
         lines: { create: linesData },
       },
     });
+
+    // For ~10 of these orders, drop a delivery on today's run so the
+    // driver has a real route on first login.
+    if (deliveriesToday < 10 && customer.routeId) {
+      deliveriesToday++;
+      const dStatus = pick([
+        'PLANNED',
+        'PLANNED',
+        'PLANNED',
+        'PICKED',
+        'IN_TRANSIT',
+        'DELIVERED',
+      ] as const);
+      await prisma.deliveryAssignment.create({
+        data: {
+          tenantId: tenant.id,
+          orderId: createdOrder.id,
+          customerId: customer.id,
+          routeId: customer.routeId,
+          driverId: delivery.id,
+          status: dStatus as any,
+          scheduledFor: todayMorning,
+          sequence: deliveriesToday,
+          startedAt: dStatus !== 'PLANNED' ? new Date() : null,
+          deliveredAt: dStatus === 'DELIVERED' ? new Date() : null,
+          amountCollected: dStatus === 'DELIVERED' ? total : null,
+          paymentMethod: dStatus === 'DELIVERED' ? 'CASH' : null,
+        },
+      });
+    }
   }
 
   // ---- historical calls ----

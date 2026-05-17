@@ -6,3 +6,4 @@ export * from './schemas/campaign';
 export * from './schemas/call';
 export * from './schemas/suggestion';
 export * from './schemas/common';
+export * from './schemas/delivery';
