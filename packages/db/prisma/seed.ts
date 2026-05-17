@@ -346,6 +346,7 @@ async function main() {
       OrderStatus.DELIVERED,
       OrderStatus.OUT_FOR_DELIVERY,
     ]);
+    const orderCreated = daysAgo(rand(0, 29));
     const createdOrder = await prisma.order.create({
       data: {
         tenantId: tenant.id,
@@ -357,8 +358,10 @@ async function main() {
         subtotal,
         discount,
         total,
-        confirmedAt: daysAgo(rand(2, 60)),
-        syncedAt: daysAgo(rand(1, 59)),
+        createdAt: orderCreated,
+        updatedAt: orderCreated,
+        confirmedAt: new Date(orderCreated.getTime() + 60 * 60 * 1000),
+        syncedAt: new Date(orderCreated.getTime() + 90 * 60 * 1000),
         lines: { create: linesData },
       },
     });
@@ -404,7 +407,7 @@ async function main() {
       status === CallStatus.COMPLETED
         ? pick([CallOutcome.ORDER_CREATED, CallOutcome.NO_ORDER, CallOutcome.CALLBACK_SCHEDULED, CallOutcome.INFO_REQUEST])
         : null;
-    const queued = daysAgo(rand(1, 45));
+    const queued = daysAgo(rand(0, 29));
     const connected = status === CallStatus.COMPLETED ? new Date(queued.getTime() + rand(5, 20) * 1000) : null;
     const ended = connected ? new Date(connected.getTime() + rand(30, 600) * 1000) : null;
 
@@ -417,6 +420,8 @@ async function main() {
         languageQueue: customer.id ? LanguagePreference.EN : undefined,
         customerId: customer.id,
         agentId: agent.id,
+        createdAt: queued,
+        updatedAt: queued,
         fromNumber: direction === CallDirection.INBOUND ? customer.phone : '+2348000000000',
         toNumber: direction === CallDirection.INBOUND ? '+2348000000000' : customer.phone,
         queuedAt: queued,

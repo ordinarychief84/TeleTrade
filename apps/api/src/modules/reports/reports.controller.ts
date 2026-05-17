@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Query } from '@nestjs/common';
 import { ReportsService } from './reports.service';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 
@@ -7,8 +7,9 @@ export class ReportsController {
   constructor(private readonly reports: ReportsService) {}
 
   @Get('overview')
-  overview(@CurrentUser() u: AuthUser) {
-    return this.reports.overview(u.tenantId);
+  overview(@CurrentUser() u: AuthUser, @Query('windowDays') windowDays?: string) {
+    const n = windowDays ? Number(windowDays) : 30;
+    return this.reports.overview(u.tenantId, Number.isFinite(n) ? n : 30);
   }
 
   @Get('agents')
