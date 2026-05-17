@@ -9,7 +9,7 @@ import { Prisma } from '@prisma/client';
 export class OrdersService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly duplicates: DuplicateDetectorService,
+    private readonly duplicateDetector: DuplicateDetectorService,
     private readonly dms: DmsService
   ) {}
 
@@ -122,7 +122,7 @@ export class OrdersService {
     if (!order.lines.length) throw new BadRequestException('Order has no lines');
 
     // 1. Duplicate detection — same outlet + same SKU within 30 min
-    const dup = await this.duplicates.detect({
+    const dup = await this.duplicateDetector.detect({
       tenantId,
       customerId: order.customerId,
       skuCodes: order.lines.map((l) => l.skuCode),

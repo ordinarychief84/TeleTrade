@@ -73,7 +73,7 @@ export class TelephonyService implements OnModuleInit {
     await this.provider.answer(call.id, agentId);
     return this.calls.updateState(callId, {
       status: CallStatus.CONNECTED,
-      agentId,
+      agent: { connect: { id: agentId } },
       connectedAt: new Date(),
     });
   }
@@ -94,7 +94,7 @@ export class TelephonyService implements OnModuleInit {
       case 'answered':
         await this.calls.updateState(evt.callId, {
           status: CallStatus.CONNECTED,
-          agentId: evt.agentId,
+          agent: { connect: { id: evt.agentId } },
           connectedAt: new Date(),
         });
         this.gateway.broadcast('call.answered', { callId: evt.callId, agentId: evt.agentId });

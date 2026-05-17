@@ -1,4 +1,4 @@
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor, SetMetadata } from '@nestjs/common';
+import { CallHandler, ExecutionContext, Inject, Injectable, NestInterceptor, SetMetadata } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, tap } from 'rxjs';
 import { PrismaService } from '../../prisma/prisma.service';
@@ -13,7 +13,10 @@ export const Audited = (entity: string, action: string) => SetMetadata(AUDIT_KEY
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-  constructor(private readonly prisma: PrismaService, private readonly reflector: Reflector) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    @Inject(Reflector) private readonly reflector: Reflector
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
     const meta = this.reflector.get<AuditMeta>(AUDIT_KEY, context.getHandler());

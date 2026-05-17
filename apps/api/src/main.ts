@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe, Logger } from '@nestjs/common';
+import { Logger } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { ZodExceptionFilter } from './common/filters/zod-exception.filter';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
@@ -12,7 +12,7 @@ async function bootstrap() {
     origin: process.env.WEB_ORIGIN?.split(',') ?? ['http://localhost:3000'],
     credentials: true,
   });
-  app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
+  // Validation is per-route via Zod pipes; no global class-validator pipe.
   app.useGlobalFilters(new AllExceptionsFilter(), new ZodExceptionFilter());
 
   const port = Number(process.env.API_PORT) || 4000;

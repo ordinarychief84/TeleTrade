@@ -12,3 +12,12 @@ packages/db/prisma/migrations/dev.db*
 packages/db/.prisma/
 .idea/
 .vscode/
+
+# Stray build outputs that should only live in dist/ — guard against
+# accidental emit into source dirs during cross-package compilation.
+packages/*/src/**/*.js
+packages/*/src/**/*.d.ts
+packages/*/src/**/*.js.map
+packages/db/prisma/**/*.js
+packages/db/prisma/**/*.d.ts
+packages/db/prisma/**/*.js.map
