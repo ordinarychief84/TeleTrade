@@ -11,6 +11,7 @@ import { Select } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/table';
+import { MultiSelect } from '@/components/ui/multi-select';
 import { formatDate } from '@/lib/utils';
 import { CampaignType, OutletType, AccountTier } from '@teletrade/shared';
 
@@ -118,10 +119,11 @@ export default function CampaignsPage() {
           </div>
           <div className="space-y-1">
             <div className="text-xs text-muted-foreground">Outlet types</div>
-            <MultiToggle
-              options={Object.values(OutletType)}
+            <MultiSelect
+              options={Object.values(OutletType).map((t) => ({ value: t, label: t.replace(/_/g, ' ') }))}
               value={outletTypes}
               onChange={setOutletTypes}
+              placeholder="All outlet types"
             />
           </div>
           <div className="flex gap-3">
