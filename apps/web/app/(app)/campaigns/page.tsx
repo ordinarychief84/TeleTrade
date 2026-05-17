@@ -13,7 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, THead, TBody, TR, TH, TD } from '@/components/ui/table';
 import { MultiSelect } from '@/components/ui/multi-select';
 import { formatDate } from '@/lib/utils';
-import { CampaignType, OutletType, AccountTier } from '@teletrade/shared';
+import { useAuth } from '@/lib/auth-store';
+import { CampaignType, OutletType, AccountTier, Role } from '@teletrade/shared';
 
 interface Campaign {
   id: string;
@@ -32,9 +33,18 @@ interface PreviewResult {
 
 export default function CampaignsPage() {
   const qc = useQueryClient();
+  const role = useAuth((s) => s.user?.role);
+  const canManageCampaigns = role === Role.SALES_MANAGER || role === Role.ADMIN;
+
   const { data: campaigns } = useQuery<Campaign[]>({
     queryKey: ['campaigns'],
     queryFn: () => api.get('/campaigns'),
+  });
+
+  const { data: agentQueue } = useQuery<any[]>({
+    queryKey: ['campaign-queue'],
+    queryFn: () => api.get('/campaigns/my-queue'),
+    enabled: !canManageCampaigns,
   });
 
   const [name, setName] = useState('');
@@ -78,6 +88,52 @@ export default function CampaignsPage() {
     mutationFn: (id: string) => api.post(`/campaigns/${id}/approve`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['campaigns'] }),
   });
+
+  if (!canManageCampaigns) {
+    return (
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-2xl font-semibold">My call queue</h1>
+          <p className="text-sm text-muted-foreground">
+            Pending campaign targets assigned to you. Sales managers create the campaigns.
+          </p>
+        </div>
+        <Card>
+          <CardContent className="p-0">
+            <Table>
+              <THead>
+                <TR>
+                  <TH>Campaign</TH>
+                  <TH>Outlet</TH>
+                  <TH>Phone</TH>
+                  <TH>Pitch</TH>
+                  <TH>Attempts</TH>
+                </TR>
+              </THead>
+              <TBody>
+                {agentQueue?.map((t: any) => (
+                  <TR key={t.id}>
+                    <TD>{t.campaign?.name}</TD>
+                    <TD>{t.customer?.outletName}</TD>
+                    <TD className="font-mono text-xs">{t.customer?.phone}</TD>
+                    <TD className="text-xs text-muted-foreground">{t.campaign?.pitch ?? '—'}</TD>
+                    <TD>{t.attempts}</TD>
+                  </TR>
+                ))}
+                {!agentQueue?.length && (
+                  <TR>
+                    <TD colSpan={5} className="text-center text-muted-foreground p-6">
+                      No campaign targets in your queue. Inbound calls keep coming through the Softphone.
+                    </TD>
+                  </TR>
+                )}
+              </TBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-4 lg:grid-cols-[420px_1fr]">
@@ -145,13 +201,18 @@ export default function CampaignsPage() {
             </div>
           </div>
           <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={() => previewMut.mutate()}>
-              Preview targets
+            <Button variant="outline" onClick={() => previewMut.mutate()} disabled={previewMut.isPending}>
+              {previewMut.isPending ? 'Previewing…' : 'Preview targets'}
             </Button>
-            <Button onClick={() => createMut.mutate()} disabled={!name}>
-              Save as draft
+            <Button onClick={() => createMut.mutate()} disabled={!name || createMut.isPending}>
+              {createMut.isPending ? 'Saving…' : 'Save as draft'}
             </Button>
           </div>
+          {(previewMut.error || createMut.error) && (
+            <div className="text-sm text-destructive">
+              {((previewMut.error || createMut.error) as Error).message}
+            </div>
+          )}
           {previewMut.data && (
             <div className="rounded-md bg-muted p-3 text-xs space-y-2">
               <div className="font-medium text-foreground">{previewMut.data.count} matching outlets</div>
