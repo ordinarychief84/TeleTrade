@@ -134,17 +134,8 @@ export default function SoftphonePage() {
 
   const { data: skus } = useQuery<Sku[]>({
     queryKey: ['skus'],
-    queryFn: () => api.get('/customers/skus').catch(() => [] as Sku[]),
-    // Skus aren't exposed in the customers route; fetch via report or include in customer 360.
-    // For MVP we fetch by listing first customer's 360 promos. As a simpler proxy:
-    enabled: false,
+    queryFn: () => api.get('/skus'),
   });
-
-  // pragmatic: we list SKUs by querying /reports/sku-uptake (returns code+name) — but we
-  // need unitPrice. So request /customers?pageSize=1 won't help. Instead expose via a
-  // simple inline fetch from the first customer's promos. To keep this fast we just
-  // fetch SKUs from a separate static endpoint shipped under /customers/skus would be
-  // ideal; since we didn't ship it, fall back to the customer's `orders` SKU set.
 
   const { data: customer } = useQuery<any>({
     queryKey: ['customer-360', customerId],
@@ -237,15 +228,16 @@ export default function SoftphonePage() {
 
   const elapsedSec = timerStart ? Math.floor((Date.now() - timerStart) / 1000) : 0;
 
-  // helper: get unit price from suggestion (rough — relies on the order having a sku price).
-  // We pull from customer.orders.lines if available.
   const priceForSku = useCallback(
     (skuCode: string): number => {
-      const lines = (customer?.orders ?? []).flatMap((o: any) => o.lines);
-      const found = lines.find((l: any) => l.skuCode === skuCode);
-      return found ? Number(found.unitPrice) : 0;
+      const sku = (skus ?? []).find((s) => s.code === skuCode);
+      if (sku) return Number(sku.unitPrice);
+      const fromOrders = (customer?.orders ?? [])
+        .flatMap((o: any) => o.lines)
+        .find((l: any) => l.skuCode === skuCode);
+      return fromOrders ? Number(fromOrders.unitPrice) : 0;
     },
-    [customer]
+    [skus, customer]
   );
 
   return (
