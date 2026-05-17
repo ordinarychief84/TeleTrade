@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2022"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "incremental": true,
+    "noUncheckedIndexedAccess": false,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@teletrade/db": ["packages/db/src/index.ts"],
+      "@teletrade/db/*": ["packages/db/src/*"],
+      "@teletrade/shared": ["packages/shared/src/index.ts"],
+      "@teletrade/shared/*": ["packages/shared/src/*"]
+    }
+  }
+}

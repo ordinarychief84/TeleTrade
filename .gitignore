@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.next/
+.turbo/
+.env
+.env.local
+*.log
+coverage/
+.DS_Store
+*.tsbuildinfo
+packages/db/prisma/migrations/dev.db*
+packages/db/.prisma/
+.idea/
+.vscode/

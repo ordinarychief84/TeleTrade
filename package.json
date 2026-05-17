@@ -1,0 +1,25 @@
+{
+  "name": "teletrade",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "db:migrate": "pnpm --filter @teletrade/db prisma:migrate",
+    "db:generate": "pnpm --filter @teletrade/db prisma:generate",
+    "db:seed": "pnpm --filter @teletrade/db seed",
+    "db:reset": "pnpm --filter @teletrade/db prisma:reset"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.5.0",
+    "prettier": "^3.3.0"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  }
+}
