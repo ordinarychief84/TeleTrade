@@ -6,10 +6,11 @@ export class ZodValidationPipe<T> implements PipeTransform<unknown, T | unknown>
   constructor(private readonly schema: ZodSchema<T>) {}
 
   transform(value: unknown, metadata: ArgumentMetadata): T | unknown {
-    // Only validate body / query / param payloads. Skip @CurrentUser and
-    // other custom decorators so a method-level @UsePipes doesn't reject
-    // the user injected by the auth guard.
-    if (metadata.type !== 'body' && metadata.type !== 'query' && metadata.type !== 'param') {
+    // Only validate the request body. Method-level @UsePipes also runs against
+    // @Param/@Query/@CurrentUser args, but those are scalars that should not
+    // be parsed by a body schema. Query/param validation is done inline where
+    // it's actually needed.
+    if (metadata.type !== 'body') {
       return value;
     }
     try {

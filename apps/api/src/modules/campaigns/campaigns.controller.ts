@@ -17,7 +17,6 @@ export class CampaignsController {
   }
 
   @Get('my-queue')
-  @Roles(Role.AGENT, Role.SALES_MANAGER, Role.ADMIN)
   myQueue(@CurrentUser() u: AuthUser) {
     return this.campaigns.myQueue(u.tenantId, u.userId);
   }

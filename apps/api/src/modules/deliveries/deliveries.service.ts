@@ -124,7 +124,8 @@ export class DeliveriesService {
 
   async updateStatus(tenantId: string, id: string, patch: DeliveryStatusPatch) {
     const a = await this.byId(tenantId, id);
-    const update: Prisma.DeliveryAssignmentUpdateInput = { status: patch.status, notes: patch.notes };
+    const update: Prisma.DeliveryAssignmentUpdateInput = { status: patch.status };
+    if (patch.notes !== undefined) update.notes = patch.notes;
 
     switch (patch.status) {
       case DeliveryStatus.PICKED:
