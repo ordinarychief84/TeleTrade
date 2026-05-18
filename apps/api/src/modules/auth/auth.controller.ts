@@ -3,7 +3,16 @@ import { AuthService } from './auth.service';
 import { Public } from './public.decorator';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe';
-import { loginSchema, refreshSchema, LoginInput, RefreshInput } from '@teletrade/shared';
+import {
+  loginSchema,
+  refreshSchema,
+  LoginInput,
+  RefreshInput,
+  signupSchema,
+  SignupInput,
+  acceptInviteSchema,
+  AcceptInviteInput,
+} from '@teletrade/shared';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 @Controller('auth')
@@ -15,6 +24,20 @@ export class AuthController {
   @UsePipes(new ZodValidationPipe(loginSchema))
   login(@Body() body: LoginInput) {
     return this.auth.login(body.email, body.password);
+  }
+
+  @Public()
+  @Post('signup')
+  @UsePipes(new ZodValidationPipe(signupSchema))
+  signup(@Body() body: SignupInput) {
+    return this.auth.signup(body);
+  }
+
+  @Public()
+  @Post('accept-invite')
+  @UsePipes(new ZodValidationPipe(acceptInviteSchema))
+  acceptInvite(@Body() body: AcceptInviteInput) {
+    return this.auth.acceptInvitation(body.token, body.password);
   }
 
   @Public()

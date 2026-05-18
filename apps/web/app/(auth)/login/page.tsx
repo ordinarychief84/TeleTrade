@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { login } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -62,6 +63,12 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? 'Signing in…' : 'Sign in'}
             </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              No workspace yet?{' '}
+              <Link href="/signup" className="text-primary underline">
+                Start one for your company
+              </Link>
+            </p>
             <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground space-y-1">
               <div className="font-semibold text-foreground">Demo accounts (password123)</div>
               <div>admin@teletrade.demo · manager@teletrade.demo</div>

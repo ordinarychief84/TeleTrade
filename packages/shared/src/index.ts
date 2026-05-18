@@ -7,3 +7,4 @@ export * from './schemas/call';
 export * from './schemas/suggestion';
 export * from './schemas/common';
 export * from './schemas/delivery';
+export * from './schemas/team';

@@ -182,28 +182,71 @@ enum PaymentMethod {
   CREDIT
 }
 
+enum PlanTier {
+  FREE
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  REVOKED
+  EXPIRED
+}
+
 // ---------- Core ----------
 
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  /// Billing / commercial settings. Free tier = single workspace for a trial.
+  plan         PlanTier @default(STARTER)
+  seatLimit    Int      @default(10)
+  billingEmail String?
+  industry     String?  // FMCG / Beverages / Pharma / etc.
+  country      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  users        User[]
-  customers    Customer[]
-  routes       Route[]
-  territories  Territory[]
-  skus         Sku[]
-  promotions   Promotion[]
-  calls        Call[]
-  campaigns    Campaign[]
-  orders       Order[]
-  auditLogs    AuditLog[]
-  dmsSyncJobs  DmsSyncJob[]
+  users         User[]
+  customers     Customer[]
+  routes        Route[]
+  territories   Territory[]
+  skus          Sku[]
+  promotions    Promotion[]
+  calls         Call[]
+  campaigns     Campaign[]
+  orders        Order[]
+  auditLogs     AuditLog[]
+  dmsSyncJobs   DmsSyncJob[]
   webhookEvents WebhookEvent[]
-  suggestions  Suggestion[]
+  suggestions   Suggestion[]
+  invitations   Invitation[]
+}
+
+model Invitation {
+  id          String           @id @default(cuid())
+  tenantId    String
+  email       String
+  fullName    String
+  role        Role
+  /// One-use opaque token (hashed at rest); presented in URL to the invitee.
+  tokenHash   String           @unique
+  status      InvitationStatus @default(PENDING)
+  invitedById String
+  expiresAt   DateTime
+  acceptedAt  DateTime?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  tenant    Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  invitedBy User   @relation("InvitationInviter", fields: [invitedById], references: [id])
+
+  @@index([tenantId, status])
+  @@index([email])
 }
 
 model User {
@@ -226,6 +269,7 @@ model User {
   createdCampaigns Campaign[]
   auditLogs      AuditLog[]
   deliveries     DeliveryAssignment[]
+  invitationsSent Invitation[]  @relation("InvitationInviter")
 
   @@index([tenantId])
 }
