@@ -120,8 +120,8 @@ export default function SettingsHub() {
     <div className="space-y-5 max-w-4xl">
       <div>
         <h1 className="text-2xl font-semibold">Settings</h1>
-        {data && (
-          <p className="text-xs md:text-sm text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
+        {data ? (
+          <div className="text-xs md:text-sm text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="font-medium text-foreground">{data.name}</span>
             <span>·</span>
             <span>{data.industry ?? 'No industry set'}</span>
@@ -135,6 +135,10 @@ export default function SettingsHub() {
             <span>
               {data.seatsUsed} / {data.seatLimit} seats
             </span>
+          </div>
+        ) : (
+          <p className="text-xs md:text-sm text-muted-foreground">
+            Your account, security, and (for managers) the workspace settings.
           </p>
         )}
       </div>

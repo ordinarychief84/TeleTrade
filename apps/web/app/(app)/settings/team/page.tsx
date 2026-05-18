@@ -123,10 +123,15 @@ export default function TeamPage() {
       <div className="flex items-start justify-between gap-3 flex-col md:flex-row">
         <div>
           <h1 className="text-2xl font-semibold">Team & workspace</h1>
-          <p className="text-xs md:text-sm text-muted-foreground">
-            {data.tenant.name} · {data.tenant.industry ?? '—'} · {data.tenant.country ?? '—'} ·{' '}
-            <Badge variant="outline" className="ml-1">{data.tenant.plan}</Badge>
-          </p>
+          <div className="text-xs md:text-sm text-muted-foreground flex items-center flex-wrap gap-x-2 gap-y-1">
+            <span>{data.tenant.name}</span>
+            <span>·</span>
+            <span>{data.tenant.industry ?? '—'}</span>
+            <span>·</span>
+            <span>{data.tenant.country ?? '—'}</span>
+            <span>·</span>
+            <Badge variant="outline">{data.tenant.plan}</Badge>
+          </div>
         </div>
         <Sheet open={inviteOpen} onOpenChange={setInviteOpen}>
           <SheetTrigger asChild>

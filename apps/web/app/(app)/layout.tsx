@@ -50,7 +50,7 @@ const NAV: NavItem[] = [
   { label: 'Reports', href: '/reports', icon: BarChart3, bottomTab: true },
   { label: 'Inbox', href: '/inbox', icon: Bell, bottomTab: true },
   { label: 'DMS Sync', href: '/dms', icon: Database, roles: ['SALES_MANAGER', 'ADMIN'] },
-  { label: 'Settings', href: '/settings', icon: Settings, roles: ['ADMIN'] },
+  { label: 'Settings', href: '/settings', icon: Settings }, // everyone — content is role-filtered inside
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

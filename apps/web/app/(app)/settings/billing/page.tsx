@@ -56,10 +56,11 @@ export default function BillingPage() {
     <div className="space-y-5 max-w-4xl">
       <div>
         <h1 className="text-2xl font-semibold">Plan & billing</h1>
-        <p className="text-xs md:text-sm text-muted-foreground">
-          You’re on the <Badge variant="outline" className="mx-1 text-[10px]">{data.plan}</Badge>plan,
-          billed to {data.billingEmail ?? '—'}.
-        </p>
+        <div className="text-xs md:text-sm text-muted-foreground flex items-center flex-wrap gap-x-1 gap-y-1">
+          <span>You’re on the</span>
+          <Badge variant="outline" className="text-[10px]">{data.plan}</Badge>
+          <span>plan, billed to {data.billingEmail ?? '—'}.</span>
+        </div>
       </div>
 
       <Card>

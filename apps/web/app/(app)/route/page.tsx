@@ -137,12 +137,17 @@ export default function RouteHome() {
       </div>
 
       {nextStop && (
-        <Link href={`/route/${nextStop.id}`}>
-          <Card className="border-primary/60 hover:bg-accent/30 transition">
-            <CardContent className="p-4">
+        <Card className="border-primary/60">
+          <CardContent className="p-4">
+            <Link
+              href={`/route/${nextStop.id}`}
+              className="block hover:bg-accent/30 rounded-md -m-1 p-1 transition"
+            >
               <div className="flex items-start justify-between">
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-muted-foreground">Next stop · #{nextStop.sequence}</div>
+                  <div className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Next stop · #{nextStop.sequence}
+                  </div>
                   <div className="text-lg font-semibold">{nextStop.customer.outletName}</div>
                   <div className="text-xs text-muted-foreground">
                     {nextStop.customer.address} · {nextStop.customer.contactName}
@@ -154,27 +159,25 @@ export default function RouteHome() {
                 <span className="text-sm font-mono">{nextStop.customer.phone}</span>
                 <span className="text-sm font-semibold">{formatCurrency(nextStop.order.total)}</span>
               </div>
-              <div className="mt-3 grid grid-cols-2 gap-2">
-                <a
-                  href={`tel:${nextStop.customer.phone}`}
-                  className="inline-flex items-center justify-center gap-2 rounded-md border bg-background px-3 py-2 text-sm"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Phone className="h-4 w-4" /> Call outlet
-                </a>
-                <a
-                  href={mapsHref(nextStop)}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                  className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Navigation className="h-4 w-4" /> Navigate
-                </a>
-              </div>
-            </CardContent>
-          </Card>
-        </Link>
+            </Link>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <a
+                href={`tel:${nextStop.customer.phone}`}
+                className="inline-flex items-center justify-center gap-2 rounded-md border bg-background px-3 py-2 text-sm"
+              >
+                <Phone className="h-4 w-4" /> Call outlet
+              </a>
+              <a
+                href={mapsHref(nextStop)}
+                target="_blank"
+                rel="noreferrer noopener"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary text-primary-foreground px-3 py-2 text-sm"
+              >
+                <Navigation className="h-4 w-4" /> Navigate
+              </a>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <div>
