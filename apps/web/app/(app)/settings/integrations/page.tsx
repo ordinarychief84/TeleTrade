@@ -21,7 +21,13 @@ interface Integrations {
     health: { pending: number; failed: number; deadLetter: number; succeeded24h: number };
   };
   telephony: { provider: string };
-  webhooks: { endpoint: string; lastReceived: string | null };
+  webhooks: {
+    endpoint: string;
+    signingSecret: string;
+    signatureHeader: string;
+    signatureScheme: string;
+    lastReceived: string | null;
+  };
 }
 
 const ADAPTER_LABEL: Record<string, string> = {
@@ -196,6 +202,14 @@ export default function IntegrationsPage() {
             Configure your DMS to POST status updates here. Replace <code>{'{adapter}'}</code> with{' '}
             <code>odoo</code>, <code>sap_b1</code>, <code>dynamics_365</code>, or <code>custom</code>.
           </p>
+          <div>
+            <div className="text-[11px] uppercase tracking-wide text-muted-foreground mb-1">Signing secret (HMAC-SHA256)</div>
+            <Input value={data.webhooks.signingSecret} readOnly className="font-mono text-xs" type="password" />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Send <code>{data.webhooks.signatureHeader}: {data.webhooks.signatureScheme}</code>. Unsigned or
+              wrong-signed requests are rejected with 401.
+            </p>
+          </div>
           <div className="text-xs text-muted-foreground">
             Last event: {data.webhooks.lastReceived ? formatDate(data.webhooks.lastReceived) : 'none yet'}
           </div>

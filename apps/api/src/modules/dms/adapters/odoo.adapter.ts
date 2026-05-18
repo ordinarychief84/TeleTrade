@@ -1,19 +1,25 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DmsAdapter, DmsOrderPayload, DmsPushResult } from '../adapter.interface';
+import { DmsAdapter, DmsOrderPayload, DmsPushResult, TenantDmsConfig } from '../adapter.interface';
 import { DmsAdapterKind } from '@teletrade/shared';
 
+const FETCH_TIMEOUT_MS = 15_000;
+
 /**
- * Odoo adapter. In production we'd authenticate via /web/session/authenticate,
- * then POST sale.order records using the JSON-RPC endpoint. For MVP we shape
- * the payload exactly as Odoo expects, and either POST to a real Odoo if
- * credentials are present, or simulate success (with a synthetic ref) if not.
+ * Odoo adapter. Authenticates with a bearer token and posts to /jsonrpc with
+ * the standard sale.order create call. Tenant config takes precedence; env
+ * vars (DMS_ODOO_URL / DMS_ODOO_API_KEY) act as a platform-wide fallback for
+ * single-tenant deployments. Falls back to simulated success only when no
+ * URL is configured anywhere.
  */
 @Injectable()
 export class OdooAdapter implements DmsAdapter {
   readonly kind = DmsAdapterKind.ODOO;
   private readonly log = new Logger('OdooAdapter');
 
-  async pushOrder(payload: DmsOrderPayload): Promise<DmsPushResult> {
+  async pushOrder(payload: DmsOrderPayload, config: TenantDmsConfig): Promise<DmsPushResult> {
+    const url = config.url ?? process.env.DMS_ODOO_URL;
+    const apiKey = config.apiKey ?? process.env.DMS_ODOO_API_KEY;
+
     const odooBody = {
       params: {
         model: 'sale.order',
@@ -40,30 +46,34 @@ export class OdooAdapter implements DmsAdapter {
       },
     };
 
-    if (process.env.DMS_ODOO_URL && process.env.DMS_ODOO_API_KEY) {
+    if (url && apiKey) {
       try {
-        const res = await fetch(`${process.env.DMS_ODOO_URL}/jsonrpc`, {
+        const res = await fetch(`${url.replace(/\/$/, '')}/jsonrpc`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.DMS_ODOO_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify(odooBody),
+          signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
         });
         if (!res.ok) throw new Error(`Odoo HTTP ${res.status}`);
         const json: any = await res.json();
         const id = String(json?.result ?? `odoo-${Date.now()}`);
         return { externalRef: id, echo: json };
       } catch (e) {
-        this.log.warn(`Real Odoo unavailable, falling back to simulated success: ${(e as Error).message}`);
+        const msg = (e as Error).message;
+        this.log.warn(`Odoo push failed (url=${url}): ${msg}`);
+        throw new Error(`Odoo push failed: ${msg}`);
       }
     }
 
-    // simulated success for dev / no-creds env
+    // simulated success only when nothing is configured
+    this.log.debug(`Odoo no-config simulated push for ${payload.orderReference}`);
     return { externalRef: `odoo-sim-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, echo: odooBody };
   }
 
-  async syncCustomers(_tenantId: string) {
+  async syncCustomers(_tenantId: string, _config: TenantDmsConfig) {
     this.log.debug('Odoo customer sync not yet implemented');
     return { upserted: 0 };
   }

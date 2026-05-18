@@ -1,4 +1,6 @@
-import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Param, Post, Query, Req } from '@nestjs/common';
+import type { RawBodyRequest } from '@nestjs/common';
+import type { Request } from 'express';
 import { DmsService } from './dms.service';
 import { CurrentUser, AuthUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../auth/public.decorator';
@@ -28,9 +30,11 @@ export class DmsController {
     @Param('adapter') adapter: string,
     @Headers() headers: Record<string, string>,
     @Body() body: unknown,
+    @Req() req: RawBodyRequest<Request>,
     @Query('tenantId') tenantId?: string
   ) {
     const kind = (adapter.toUpperCase() as DmsAdapterKind);
-    return this.dms.receiveWebhook(tenantId ?? 'unknown', kind, headers, body);
+    const raw = req.rawBody?.toString('utf8') ?? JSON.stringify(body ?? {});
+    return this.dms.receiveWebhook(tenantId ?? 'unknown', kind, headers, raw, body);
   }
 }

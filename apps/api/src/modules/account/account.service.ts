@@ -10,6 +10,7 @@ import {
   PlanTier,
 } from '@teletrade/shared';
 import { AuthService } from '../auth/auth.service';
+import { encryptSecret, maskSecret, webhookSecretFor } from '../dms/integrations-crypto';
 
 const SEATS_BY_PLAN: Record<PlanTier, number> = {
   FREE: 3,
@@ -160,20 +161,39 @@ export class AccountService {
   }
 
   async updateDms(tenantId: string, input: DmsConfigInput) {
+    // Read existing config so a partial update (e.g. URL only) doesn't drop the stored key.
+    const existing = await this.prisma.tenant.findUnique({
+      where: { id: tenantId },
+      select: { dmsConfig: true },
+    });
+    const current = ((existing?.dmsConfig as any) ?? {}) as Record<string, unknown>;
+
+    // Encrypt the new key at rest; if blank, preserve what's already stored.
+    let apiKeyEnc: string | null = (current.apiKeyEnc as string | undefined) ?? null;
+    let apiKeyMask: string | null = (current.apiKeyMask as string | undefined) ?? null;
+    if (input.apiKey && input.apiKey.length > 0) {
+      apiKeyEnc = encryptSecret(input.apiKey);
+      apiKeyMask = maskSecret(input.apiKey);
+    }
+
     return this.prisma.tenant.update({
       where: { id: tenantId },
       data: {
         dmsAdapter: input.adapter,
         dmsConfig: {
           url: input.url ?? null,
-          apiKey: input.apiKey ? '***' + input.apiKey.slice(-4) : null, // store masked hint only in the JSON for safety in MVP
           database: input.database ?? null,
           username: input.username ?? null,
-          // In production, the apiKey would be encrypted at rest. For the demo we only echo the last 4.
+          apiKeyEnc,
+          apiKeyMask,
         },
       },
       select: { dmsAdapter: true, dmsConfig: true },
-    });
+    }).then((t) => ({
+      ...t,
+      // Never echo apiKeyEnc back over the wire.
+      dmsConfig: this.publicDmsConfig(t.dmsConfig),
+    }));
   }
 
   async integrationsSnapshot(tenantId: string) {
@@ -196,7 +216,7 @@ export class AccountService {
     return {
       dms: {
         adapter: t.dmsAdapter ?? process.env.DMS_DEFAULT_ADAPTER?.toUpperCase() ?? 'ODOO',
-        config: t.dmsConfig,
+        config: this.publicDmsConfig(t.dmsConfig),
         health: { pending, failed, deadLetter, succeeded24h },
       },
       telephony: {
@@ -205,8 +225,28 @@ export class AccountService {
       },
       webhooks: {
         endpoint: `${process.env.API_URL ?? 'http://localhost:4100'}/api/v1/dms/webhooks/{adapter}`,
+        signingSecret: webhookSecretFor(tenantId),
+        signatureHeader: 'X-TeleTrade-Signature',
+        signatureScheme: 'sha256=<hex-hmac-of-raw-body>',
         lastReceived: lastWebhook?.createdAt ?? null,
       },
+    };
+  }
+
+  /** Strip the ciphertext, return only safe fields + masked hint. */
+  private publicDmsConfig(cfg: unknown): {
+    url: string | null;
+    database: string | null;
+    username: string | null;
+    apiKey: string | null;
+  } | null {
+    if (!cfg || typeof cfg !== 'object') return null;
+    const c = cfg as any;
+    return {
+      url: c.url ?? null,
+      database: c.database ?? null,
+      username: c.username ?? null,
+      apiKey: c.apiKeyMask ?? null,
     };
   }
 

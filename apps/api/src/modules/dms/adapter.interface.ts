@@ -43,11 +43,22 @@ export interface DmsPushResult {
   echo?: Record<string, unknown>;
 }
 
+/**
+ * Per-tenant connection settings passed to every adapter call. Values come
+ * from Tenant.dmsConfig (decrypted) with platform-level env vars as fallback.
+ */
+export interface TenantDmsConfig {
+  url?: string | null;
+  apiKey?: string | null;
+  database?: string | null;
+  username?: string | null;
+}
+
 export interface DmsAdapter {
   readonly kind: DmsAdapterKind;
-  pushOrder(payload: DmsOrderPayload): Promise<DmsPushResult>;
+  pushOrder(payload: DmsOrderPayload, config: TenantDmsConfig): Promise<DmsPushResult>;
   /** Optional nightly inbound sync — implementations can no-op in MVP. */
-  syncCustomers(tenantId: string): Promise<{ upserted: number }>;
+  syncCustomers(tenantId: string, config: TenantDmsConfig): Promise<{ upserted: number }>;
   /** Optional webhook verification + parsing. */
   handleWebhook(headers: Record<string, string>, body: unknown): Promise<{ orderRef?: string; event: string }>;
 }

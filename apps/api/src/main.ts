@@ -6,7 +6,7 @@ import { ZodExceptionFilter } from './common/filters/zod-exception.filter';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { cors: false });
+  const app = await NestFactory.create(AppModule, { cors: false, rawBody: true });
   app.setGlobalPrefix('api/v1');
   app.enableCors({
     origin: process.env.WEB_ORIGIN?.split(',') ?? ['http://localhost:3000'],
