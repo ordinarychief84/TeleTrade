@@ -199,17 +199,25 @@ enum InvitationStatus {
 // ---------- Core ----------
 
 model Tenant {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
+  id             String          @id @default(cuid())
+  name           String
+  slug           String          @unique
   /// Billing / commercial settings. Free tier = single workspace for a trial.
-  plan         PlanTier @default(STARTER)
-  seatLimit    Int      @default(10)
-  billingEmail String?
-  industry     String?  // FMCG / Beverages / Pharma / etc.
-  country      String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  plan           PlanTier        @default(STARTER)
+  seatLimit      Int             @default(10)
+  billingEmail   String?
+  industry       String?         // FMCG / Beverages / Pharma / etc.
+  country        String?
+  timezone       String?         // IANA name, e.g. "Africa/Lagos"
+  logoUrl        String?
+  /// Override the env-level DMS adapter at the tenant level.
+  dmsAdapter     DmsAdapterKind?
+  /// Tenant-scoped DMS connection settings (URL, auth) — JSON blob.
+  dmsConfig      Json?
+  /// Set when the workspace is scheduled for deletion.
+  deletedAt      DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 
   users         User[]
   customers     Customer[]

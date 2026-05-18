@@ -8,3 +8,4 @@ export * from './schemas/suggestion';
 export * from './schemas/common';
 export * from './schemas/delivery';
 export * from './schemas/team';
+export * from './schemas/account';

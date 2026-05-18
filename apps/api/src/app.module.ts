@@ -22,6 +22,7 @@ import { RealtimeModule } from './modules/realtime/realtime.module';
 import { DeliveriesModule } from './modules/deliveries/deliveries.module';
 import { InboxModule } from './modules/inbox/inbox.module';
 import { TeamModule } from './modules/team/team.module';
+import { AccountModule } from './modules/account/account.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
 @Module({
@@ -54,6 +55,7 @@ import { AuditInterceptor } from './common/interceptors/audit.interceptor';
     DeliveriesModule,
     InboxModule,
     TeamModule,
+    AccountModule,
   ],
   providers: [{ provide: APP_INTERCEPTOR, useClass: AuditInterceptor }],
 })
